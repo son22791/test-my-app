@@ -8,8 +8,10 @@ import Web3 from "web3";
 
 
 const getLibrary = (provider:any): Web3 => {
+  // console.log(provider,"provider");
   return provider
 }
+
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );

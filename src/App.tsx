@@ -3,9 +3,22 @@ import React, {useState} from "react";
 import { InjectedConnector } from "@web3-react/injected-connector";
 import { useWeb3React } from "@web3-react/core";
 import "./App.css";
-import { Checkbox }from "@chakra-ui/react";
+import { Checkbox,FormControl, FormLabel, Input, FormErrorMessage, Button }from "@chakra-ui/react";
 import ERC20ABI from "../src/ERC20ABI.json";
 import Web3 from "web3";
+
+class BondInformation {
+  constructor(
+    public bondName: string,
+    public bondSymbol: string,
+    public description: string,
+    public totalSupply: string,
+    public startSale: number,
+    public active: number,
+    public duration: number,
+    public issuePrice: string,
+  ) { }
+}
 function App() {
   const { activate, deactivate, active, chainId, account, library } = useWeb3React();
   const [balance, setBalance] = useState<string>()
@@ -30,13 +43,41 @@ function App() {
 } catch (error) {
   console.log(error);
 } 
-console.log(balance,"balance");
 // TransForm
 const transForm = ()=>{
   const getBUSDContract = () => getContract(ERC20ABI, "0x2A0151ad6Ead421e5325c4B6808A9fd5e0440A36");
   //transferFrom
   getBUSDContract().methods.transferFrom(account,account2, "50000000000000000000").send({from: account })
 } 
+
+//Bonds
+
+const {
+  bondName,
+  bondSymbol,
+  collateralAmount,
+  description,
+  faceValue,
+  duration,
+  durationUnit,
+  units,
+  issuePrice,
+  collateralType,
+  timeOnSale,
+  timeActive,
+  borrowSymbol,
+} = formData;
+
+const bondInformation = new BondInformation(
+  bondName.trim(),
+  bondSymbol.trim().toUpperCase(),
+  description.trim(),
+  new BigNumber(units).times(new BigNumber(10).pow(18)).toFixed(),
+  moment(timeOnSale).unix(),
+  moment(timeActive).unix(),
+  getDays(duration, durationUnit, timeActive),
+  new BigNumber(issuePrice).times(new BigNumber(10).pow(18)).toFixed(),
+);
   return (
     <div className="App">
       {account?
@@ -56,6 +97,28 @@ const transForm = ()=>{
       </div>
       <div>Account: {account}</div>
       <div>Network ID: {chainId}</div>
+      <br />
+      <br />
+      <br />
+      <form onSubmit={handleSubmit(onSubmit)}>
+      <FormControl isInvalid={errors.name}>
+        <FormLabel htmlFor='name'>First name</FormLabel>
+        <Input
+          id='name'
+          placeholder='name'
+          {...register('name', {
+            required: 'This is required',
+            minLength: { value: 4, message: 'Minimum length should be 4' },
+          })}
+        />
+        <FormErrorMessage>
+          {errors.name && errors.name.message}
+        </FormErrorMessage>
+      </FormControl>
+      <Button mt={4} colorScheme='teal' isLoading={isSubmitting} type='submit'>
+        Submit
+      </Button>
+    </form>
     </div>
   );
 }

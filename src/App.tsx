@@ -1,12 +1,12 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 // import {fromWei} from '../src/walletInfo'
 import { InjectedConnector } from "@web3-react/injected-connector";
 import { useWeb3React } from "@web3-react/core";
 import "./App.css";
-import { Checkbox,FormControl, FormLabel, Input, FormErrorMessage, Button }from "@chakra-ui/react";
+import { Checkbox,FormControl, FormLabel, Input, FormErrorMessage, Button, Box }from "@chakra-ui/react";
 import ERC20ABI from "../src/ERC20ABI.json";
 import Web3 from "web3";
-
+import Bonds from "./Bonds";
 class BondInformation {
   constructor(
     public bondName: string,
@@ -17,13 +17,18 @@ class BondInformation {
     public active: number,
     public duration: number,
     public issuePrice: string,
-  ) { }
-}
-function App() {
-  const { activate, deactivate, active, chainId, account, library } = useWeb3React();
+    ) { }
+  }
+  function App() {
+    const { activate, deactivate, active, chainId, account, library } = useWeb3React();
+    const [value, setValue] = useState('')
   const [balance, setBalance] = useState<string>()
   // const fromWei = (value: any, unit: Web3Utils.Unit = 'ether') => Web3Utils.fromWei(value || '', unit )
 
+
+  useEffect(() => {
+    setBalance(undefined)
+  },[account]);
   //activate and deactivate the connection to the wallet of your choice. vs mainNet 56 or testNet 97 of Metamask
   const Injected = new InjectedConnector({
     supportedChainIds: [56, 97],
@@ -52,32 +57,34 @@ const transForm = ()=>{
 
 //Bonds
 
-const {
-  bondName,
-  bondSymbol,
-  collateralAmount,
-  description,
-  faceValue,
-  duration,
-  durationUnit,
-  units,
-  issuePrice,
-  collateralType,
-  timeOnSale,
-  timeActive,
-  borrowSymbol,
-} = formData;
+// const {
+//   bondName,
+//   bondSymbol,
+//   collateralAmount,
+//   description,
+//   faceValue,
+//   duration,
+//   durationUnit,
+//   units,
+//   issuePrice,
+//   collateralType,
+//   timeOnSale,
+//   timeActive,
+//   borrowSymbol,
+// } = formData;
 
-const bondInformation = new BondInformation(
-  bondName.trim(),
-  bondSymbol.trim().toUpperCase(),
-  description.trim(),
-  new BigNumber(units).times(new BigNumber(10).pow(18)).toFixed(),
-  moment(timeOnSale).unix(),
-  moment(timeActive).unix(),
-  getDays(duration, durationUnit, timeActive),
-  new BigNumber(issuePrice).times(new BigNumber(10).pow(18)).toFixed(),
-);
+// const bondInformation = new BondInformation(
+//   bondName.trim(),
+//   bondSymbol.trim().toUpperCase(),
+//   description.trim(),
+//   new BigNumber(units).times(new BigNumber(10).pow(18)).toFixed(),
+//   moment(timeOnSale).unix(),
+//   moment(timeActive).unix(),
+//   getDays(duration, durationUnit, timeActive),
+//   new BigNumber(issuePrice).times(new BigNumber(10).pow(18)).toFixed(),
+// );
+
+const handleChange = (event) => setValue(event.target.value)
   return (
     <div className="App">
       {account?
@@ -100,25 +107,7 @@ const bondInformation = new BondInformation(
       <br />
       <br />
       <br />
-      <form onSubmit={handleSubmit(onSubmit)}>
-      <FormControl isInvalid={errors.name}>
-        <FormLabel htmlFor='name'>First name</FormLabel>
-        <Input
-          id='name'
-          placeholder='name'
-          {...register('name', {
-            required: 'This is required',
-            minLength: { value: 4, message: 'Minimum length should be 4' },
-          })}
-        />
-        <FormErrorMessage>
-          {errors.name && errors.name.message}
-        </FormErrorMessage>
-      </FormControl>
-      <Button mt={4} colorScheme='teal' isLoading={isSubmitting} type='submit'>
-        Submit
-      </Button>
-    </form>
+      <Bonds/>
     </div>
   );
 }

@@ -7,18 +7,6 @@ import { Checkbox,FormControl, FormLabel, Input, FormErrorMessage, Button, Box }
 import ERC20ABI from "../src/ERC20ABI.json";
 import Web3 from "web3";
 import Bonds from "./Bonds";
-class BondInformation {
-  constructor(
-    public bondName: string,
-    public bondSymbol: string,
-    public description: string,
-    public totalSupply: string,
-    public startSale: number,
-    public active: number,
-    public duration: number,
-    public issuePrice: string,
-    ) { }
-  }
   function App() {
     const { activate, deactivate, active, chainId, account, library } = useWeb3React();
     const [value, setValue] = useState('')
@@ -27,7 +15,11 @@ class BondInformation {
 
 
   useEffect(() => {
-    setBalance(undefined)
+    if (account==undefined) {
+      setBalance(undefined)
+    }
+    console.log(account,"account");
+    
   },[account]);
   //activate and deactivate the connection to the wallet of your choice. vs mainNet 56 or testNet 97 of Metamask
   const Injected = new InjectedConnector({

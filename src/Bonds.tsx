@@ -1,11 +1,19 @@
 import { Box, Button, ButtonGroup, FormControl, FormErrorMessage, Input,FormLabel, VStack, Heading } from '@chakra-ui/react'
 import { isDisabled } from '@testing-library/user-event/dist/utils';
-import { floor, isEqual, isNaN, lowerCase, round } from 'lodash';
+import { isArray } from 'lodash';
 import React from 'react'
 import moment from 'moment';
 import { useFormik } from 'formik';
 import * as Yup from 'yup'
 import BigNumber from 'bignumber.js';
+import tokens from './tokens';
+import { useWeb3React } from "@web3-react/core";
+import Web3 from "web3";
+import bondLendingABI from "../src/bondLending.json";
+import ERC20ABI from "../src/ERC20ABI.json";
+import contracts from './contracts';
+
+
 class BondInformation {
     constructor(
       public bondName: string,
@@ -38,6 +46,61 @@ class BondInformation {
     ) { }
   }
 export default function Bonds() {
+
+    const {account , library}= useWeb3React();
+    const onSubmit = async (values, actions) =>{
+        if(account){
+            const web3 = new Web3(library);
+            const getContract = (abi: any, address: string) => {
+                return new web3.eth.Contract(abi, address);
+              };
+              const getAddress = (address: any): string => {
+                const mainNetChainId = 56;
+                const chainId = process.env.REACT_APP_CHAIN_ID;
+                return address[chainId === '56' ? mainNetChainId : 97];
+              };
+            const Max_256 = '115792089237316195423570985008687907853269984665640564039457584007913129639935';
+            const getBep20Contract = () => getContract(ERC20ABI, tokens?.posiv2?.address[97] )
+            await getBep20Contract().methods.approve( 
+                getAddress(contracts?.bondLendingFactory),
+                Max_256,).send({from: account})
+            // alert(JSON.stringify(values,null,2));
+            // console.log(values.bondName,"values");
+            const bondInformation = new BondInformation(
+                formik.values.bondName.trim(),
+                formik.values.bondSymbol.trim().toUpperCase(),
+                formik.values.description.trim(),
+                new BigNumber(Number(formik.values.units)).times(new BigNumber(10).pow(18)).toFixed(),
+                moment(formik.values.timeOnSale).unix(),
+                moment(formik.values.timeActive).unix(),
+                formik.values.duration,
+                new BigNumber((Number((Number(formik.values.collateralAmount)*0.99*0.65*0.099).toFixed(2))/Number(formik.values.units)).toFixed(2)).times(new BigNumber(10).pow(18)).toFixed(),
+              );
+              console.log(bondInformation,"bondInformation");
+            //   const getBondLendingFactoryContract = (web3?: Web3) => {
+            //     return getContract(bondLendingABI, getAddress(contracts.bondLendingFactory), web3);
+            //   };
+              const assetInformationAmount = new AssetInformation(
+                "0x2A0151ad6Ead421e5325c4B6808A9fd5e0440A36",
+                new BigNumber(Number(formik.values.collateralAmount)).times(new BigNumber(10).pow(18)).toFixed(),
+                getAddress(tokens?.busd.address),
+                new BigNumber(Number(formik.values.faceValue)).times(new BigNumber(10).pow(18)).toFixed(),
+                AssetType.Token,
+                AssetType.Token,
+                [],
+                "0x55d2869f370daaffba57815991e444b42018737d219b5b35c2cf5aebdacf3589",
+                "0x55d2869f370daaffba57815991e444b42018737d219b5b35c2cf5aebdacf3588",
+              );
+            //   console.log(assetInformationAmount,"assetInformationAmount");
+                const getBondLendingFactory = () => getContract(bondLendingABI, "0x5939269359add646aBe56CDF647713d03BD2Bcd4");
+                // console.log(getBondLendingFactory,"getBondLendingFactory");
+                
+                getBondLendingFactory().methods.issueBond(
+                    Object.values(bondInformation).map((v) => (isArray(v) ? v : isFinite(v) ? v.toString() : v)),
+                    Object.values(assetInformationAmount).map((v) => (isArray(v) ? v : isFinite(v) ? v.toString() : v)),
+                  ).send({from:account});
+        }
+    }
     const formik = useFormik({
         initialValues:{
             bondName : "",
@@ -60,40 +123,9 @@ export default function Bonds() {
             timeActive: moment().add(1.5, 'hours').add(1, 'day').toDate(), //
             timeMaturity: moment().add(1.5, 'hours').add(1, 'day').add(1, 'year').toDate(), //
       },
-      onSubmit: (values, actions) =>{
-        alert(JSON.stringify(values,null,2));
-        console.log(values.bondName,"values");
-        
-      }
+      onSubmit,
     })
     // const ACTUAL_COLLATERAL_AMOUNT_RATE = 0.99;
-    const bondInformation = new BondInformation(
-        formik.values.bondName.trim(),
-        formik.values.bondSymbol.trim().toUpperCase(),
-        formik.values.description.trim(),
-        new BigNumber(Number(formik.values.units)).times(new BigNumber(10).pow(18)).toFixed(),
-        moment(formik.values.timeOnSale).unix(),
-        moment(formik.values.timeActive).unix(),
-        formik.values.duration,
-        new BigNumber(Number(formik.values.issuePrice)).times(new BigNumber(10).pow(18)).toFixed(),
-      );
-      console.log(bondInformation,"bondInformation");
-
-    //   const getBondLendingFactoryContract = (web3?: Web3) => {
-    //     return getContract(bondLendingABI, getAddress(contracts.bondLendingFactory), web3);
-    //   };
-      const assetInformationAmount = new AssetInformation(
-        "0x2A0151ad6Ead421e5325c4B6808A9fd5e0440A36",
-        new BigNumber(Number(formik.values.collateralAmount)).times(new BigNumber(10).pow(18)).toFixed(),
-        "0x33e36E5C0Ed6d2615E678c095A5Be582a1E01844",
-        new BigNumber(Number(formik.values.faceValue)).times(new BigNumber(10).pow(18)).toFixed(),
-        AssetType.Token,
-        AssetType.Token,
-        [],
-        "0x55d2869f370daaffba57815991e444b42018737d219b5b35c2cf5aebdacf3589",
-        "0x55d2869f370daaffba57815991e444b42018737d219b5b35c2cf5aebdacf3588",
-      );
-      console.log(assetInformationAmount,"assetInformationAmount");
 
   return (
    <form onSubmit ={formik.handleSubmit}  >

@@ -76,7 +76,6 @@ export default function Bonds() {
                 formik.values.duration,
                 new BigNumber((Number((Number(formik.values.collateralAmount)*0.99*0.65*0.099).toFixed(2))/Number(formik.values.units)).toFixed(2)).times(new BigNumber(10).pow(18)).toFixed(),
               );
-              console.log(bondInformation,"bondInformation");
             //   const getBondLendingFactoryContract = (web3?: Web3) => {
             //     return getContract(bondLendingABI, getAddress(contracts.bondLendingFactory), web3);
             //   };
@@ -91,14 +90,15 @@ export default function Bonds() {
                 "0x55d2869f370daaffba57815991e444b42018737d219b5b35c2cf5aebdacf3589",
                 "0x55d2869f370daaffba57815991e444b42018737d219b5b35c2cf5aebdacf3588",
               );
-            //   console.log(assetInformationAmount,"assetInformationAmount");
                 const getBondLendingFactory = () => getContract(bondLendingABI, "0x5939269359add646aBe56CDF647713d03BD2Bcd4");
-                // console.log(getBondLendingFactory,"getBondLendingFactory");
                 
                 getBondLendingFactory().methods.issueBond(
                     Object.values(bondInformation).map((v) => (isArray(v) ? v : isFinite(v) ? v.toString() : v)),
                     Object.values(assetInformationAmount).map((v) => (isArray(v) ? v : isFinite(v) ? v.toString() : v)),
-                  ).send({from:account});
+                  ).send({from:account}).then(function(newContractInstance){
+                    console.log(newContractInstance.options.address, "newContractInstance.options.address") // instance with the new contract address
+                });
+                web3.eth.getTransaction("0xa9afcd1f9a54d0e28c2a59d35c84c7e36c6ee7a27bd7c592acdea8314a8c1fe2").then(console.log);
         }
     }
     const formik = useFormik({
@@ -143,7 +143,7 @@ export default function Bonds() {
     </FormControl>
     <FormControl>
         <FormLabel>Collateral amount</FormLabel>
-        <Input onChange={formik.handleChange} value={formik.values.collateralAmount?? ""} variant='outline' name="collateralAmount" placeholder='Enter your value for colleteral with 10k POSI minium'></Input>
+        <Input onChange={formik.handleChange} value={formik.values.collateralAmount??""} variant='outline' name="collateralAmount" placeholder='Enter your value for colleteral with 10k POSI minium'></Input>
     </FormControl>
     <FormControl>
         <FormLabel>Actual collateral amount</FormLabel>
